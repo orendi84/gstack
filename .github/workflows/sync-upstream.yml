@@ -1,0 +1,36 @@
+name: Sync upstream and merge into customizations
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6am UTC
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/garrytan/gstack.git
+
+      - name: Sync main from upstream
+        run: |
+          git fetch upstream
+          git checkout main
+          git merge upstream/main --no-edit
+          git push origin main
+
+      - name: Merge main into gary-customizations
+        run: |
+          git checkout gary-customizations
+          git merge main --no-edit
+          git push origin gary-customizations
